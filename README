@@ -6,4 +6,7 @@ so understanding teenygrad is a good step to understanding tinygrad.
 While it supports most of tinygrad's functionality,
 the extra 3k lines in tinygrad get you speed and diverse backend support.
 
-The only dependency of teenygrad is numpy.
+tensor.py and mlops.py are both tinygrad's and teenygrad's frontend.
+lazy.py is a replacement for all of tinygrad's backend.
+
+The only dependency of teenygrad is numpy (well, and tqdm)
