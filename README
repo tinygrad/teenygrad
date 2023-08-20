@@ -1,3 +1,5 @@
 teenygrad is <1000 mnist trainer
 
 It shares 90% of its code with tinygrad, so understanding teenygrad is a good step to understanding tinygrad
+
+While it supports most of tinygrad's functionality, the extra 3k lines in tinygrad get you speed and diverse backend support.
