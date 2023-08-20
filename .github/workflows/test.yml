@@ -19,6 +19,6 @@ jobs:
       with:
         python-version: 3.11
     - name: Install Dependencies
-      run: pip install numpy
-    - name: Test EfficientNet
+      run: pip install numpy tqdm
+    - name: Train MNIST
       run: PYTHONPATH="." python mnist.py
