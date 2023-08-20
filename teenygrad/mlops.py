@@ -23,28 +23,28 @@ class Sin(Function):
     self.x = x
     return x.unary_op(UnaryOps.SIN)
   def backward(self, grad:LazyBuffer) -> LazyBuffer:
-    return ((math.pi / 2) - self.x).unary_op(UnaryOps.SIN) * grad
+    return (self.x.const_like(math.pi / 2) - self.x).unary_op(UnaryOps.SIN) * grad
 
 # NOTE: maximum(x, 0) behaves differently where x=0
 class Relu(Function):
   def forward(self, x:LazyBuffer) -> LazyBuffer:
-    self.ret = x.binary_op(BinaryOps.MAX, 0)
+    self.ret = x.binary_op(BinaryOps.MAX, x.const_like(0))
     return self.ret
 
   def backward(self, grad_output:LazyBuffer) -> LazyBuffer:
-    return (0 < self.ret) * grad_output
+    return (self.ret.const_like(0) < self.ret) * grad_output
 
 class Log(Function):
   def forward(self, x:LazyBuffer) -> LazyBuffer:
     self.x = x
-    return x.unary_op(UnaryOps.LOG2) * math.log(2)
+    return x.unary_op(UnaryOps.LOG2) * x.const_like(math.log(2))
 
   def backward(self, grad_output:LazyBuffer) -> LazyBuffer:
     return grad_output / self.x
 
 class Exp(Function):
   def forward(self, x:LazyBuffer) -> LazyBuffer:
-    self.ret = (x * (1/math.log(2))).unary_op(UnaryOps.EXP2)
+    self.ret = (x * x.const_like(1/math.log(2))).unary_op(UnaryOps.EXP2)
     return self.ret
 
   def backward(self, grad_output:LazyBuffer) -> LazyBuffer:
@@ -56,18 +56,18 @@ class Sqrt(Function):
     return self.ret
 
   def backward(self, grad_output:LazyBuffer) -> LazyBuffer:
-    return grad_output / (self.ret * 2)
+    return grad_output / (self.ret * self.ret.const_like(2))
 
 # NOTE: the implicit derivative of sigmoid is not stable
 # https://towardsdatascience.com/derivative-of-the-sigmoid-function-536880cf918e
 # TODO: have the backend automatically find this
 class Sigmoid(Function):
   def forward(self, x:LazyBuffer) -> LazyBuffer:
-    self.ret = 1 / (1 + (x * (-1/math.log(2))).unary_op(UnaryOps.EXP2))
+    self.ret = x.const_like(1) / (x.const_like(1) + (x * x.const_like(-1/math.log(2))).unary_op(UnaryOps.EXP2))
     return self.ret
 
   def backward(self, grad_output:LazyBuffer) -> LazyBuffer:
-    return (self.ret * (1 - self.ret)) * grad_output
+    return (self.ret * (self.ret.const_like(1) - self.ret)) * grad_output
 
 # ************* reduce ops *************
 
@@ -86,7 +86,7 @@ class Max(Function):
 
   def backward(self, grad_output:LazyBuffer) -> LazyBuffer:
     # 1s in locations where the max was chosen (can be two locations)
-    max_is_1s = 1.0 - (self.x < self.ret.expand(self.x.shape))
+    max_is_1s = self.x.const_like(1.0) - (self.x < self.ret.expand(self.x.shape))
     div = max_is_1s.reduce_op(ReduceOps.SUM, grad_output.shape).expand(self.x.shape)
     return (max_is_1s / div) * grad_output.expand(self.x.shape)
 
@@ -139,8 +139,8 @@ class Where(Function):
 
   def backward(self, grad_output:LazyBuffer):
     return None, \
-           self.x.ternary_op(TernaryOps.WHERE, grad_output, 0) if self.needs_input_grad[1] else None, \
-           self.x.ternary_op(TernaryOps.WHERE, 0, grad_output) if self.needs_input_grad[2] else None
+           self.x.ternary_op(TernaryOps.WHERE, grad_output, grad_output.const_like(0)) if self.needs_input_grad[1] else None, \
+           self.x.ternary_op(TernaryOps.WHERE, grad_output.const_like(0), grad_output) if self.needs_input_grad[2] else None
 
 # ************* movement ops *************
 
