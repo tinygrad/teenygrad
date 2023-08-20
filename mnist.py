@@ -2,47 +2,11 @@
 import numpy as np
 from teenygrad.tensor import Tensor
 from tqdm import trange
+from teenygrad.nn import optim
 import gzip, os
 
 # sorted in order of increasing complexity
-from typing import List
-from teenygrad.helpers import dedup, getenv
-
-class Optimizer:
-  def __init__(self, params: List[Tensor], lr: float):
-    # if it's None, but being put into an optimizer, set it to True
-    for x in params:
-      if x.requires_grad is None: x.requires_grad = True
-
-    self.params: List[Tensor] = dedup([x for x in params if x.requires_grad])
-    self.buffers: List[Tensor] = dedup([x for x in params if not x.requires_grad])   # buffers are still realized
-    self.lr = Tensor([lr], requires_grad=False).contiguous()
-
-  def zero_grad(self):
-    for param in self.params: param.grad = None
-
-  def realize(self, extra=None):
-    # TODO: corealize
-    # NOTE: in extra is too late for most of the params due to issues with assign
-    for p in extra + self.params + self.buffers if extra is not None else self.params + self.buffers:
-      p.realize()
-
-class SGD(Optimizer):
-  def __init__(self, params: List[Tensor], lr=0.001, momentum=0, weight_decay=0.0, nesterov=False):
-    super().__init__(params, lr)
-    self.momentum, self.wd, self.nesterov = momentum, weight_decay, nesterov
-    self.b = [Tensor.zeros(*t.shape, device=t.device, requires_grad=False) for t in self.params] if self.momentum else []
-
-  # https://pytorch.org/docs/stable/generated/torch.optim.SGD.html
-  def step(self) -> None:
-    for i, t in enumerate(self.params):
-      assert t.grad is not None
-      g = t.grad.realize() + self.wd * t.detach()
-      if self.momentum:
-        self.b[i].assign(self.momentum * self.b[i] + g).realize()  # NOTE: self.b[i] is zero on the first run, no if required
-        g = (g + self.momentum * self.b[i]) if self.nesterov else self.b[i]
-      t.assign(t.detach() - g * self.lr)
-    self.realize(self.b)
+from teenygrad.helpers import getenv
 
 def sparse_categorical_crossentropy(out, Y):
   num_classes = out.shape[-1]
@@ -103,7 +67,7 @@ def evaluate(model, X_test, Y_test, num_classes=None, BS=128, return_predict=Fal
 
 def fetch_mnist():
   parse = lambda file: np.frombuffer(gzip.open(file).read(), dtype=np.uint8).copy()
-  BASE = os.path.dirname(__file__)+"/../tinygrad/extra/datasets"
+  BASE = os.path.dirname(__file__)+"/extra/datasets"
   X_train = parse(BASE+"/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).astype(np.float32)
   Y_train = parse(BASE+"/mnist/train-labels-idx1-ubyte.gz")[8:]
   X_test = parse(BASE+"/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).astype(np.float32)
@@ -133,6 +97,6 @@ class TinyConvNet:
 if __name__ == "__main__":
   np.random.seed(1337)
   model = TinyConvNet()
-  optimizer = SGD([model.c1, model.c2, model.l1], lr=0.001)
+  optimizer = optim.Adam([model.c1, model.c2, model.l1], lr=0.001)
   train(model, X_train, Y_train, optimizer, steps=100)
-  assert evaluate(model, X_test, Y_test) > 0.80
+  assert evaluate(model, X_test, Y_test) > 0.93

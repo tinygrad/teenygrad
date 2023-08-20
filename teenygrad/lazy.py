@@ -49,12 +49,11 @@ class LazyBuffer:
   def pad(self, arg): return LazyBuffer(np.pad(self._np, arg))
 
   def unary_op(self, op):
-    if op == UnaryOps.EXP2:
-      return LazyBuffer(np.exp2(self._np))
-    elif op == UnaryOps.LOG2:
-      return LazyBuffer(np.log2(self._np))
-    else:
-      raise NotImplementedError(op)
+    if op == UnaryOps.EXP2: return LazyBuffer(np.exp2(self._np))
+    elif op == UnaryOps.LOG2: return LazyBuffer(np.log2(self._np))
+    elif op == UnaryOps.SIN: return LazyBuffer(np.sin(self._np))
+    elif op == UnaryOps.SQRT: return LazyBuffer(np.sqrt(self._np))
+    else: raise NotImplementedError(op)
 
   def binary_op(self, op, y:LazyBuffer):
     if op == BinaryOps.MAX:
