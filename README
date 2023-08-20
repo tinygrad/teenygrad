@@ -1,0 +1,3 @@
+teenygrad is <1000 mnist trainer
+
+It shares 90% of its code with tinygrad, so understanding teenygrad is a good step to understanding tinygrad
