@@ -10,3 +10,7 @@ tensor.py and mlops.py are both tinygrad's and teenygrad's frontend.
 lazy.py is a replacement for all of tinygrad's backend.
 
 The only dependency of teenygrad is numpy (well, and tqdm)
+
+Usage:
+pip install numpy tqdm
+PYTHONPATH="." python mnist.py
