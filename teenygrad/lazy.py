@@ -57,24 +57,17 @@ class LazyBuffer:
     else: raise NotImplementedError(op)
 
   def binary_op(self, op, y:LazyBuffer):
-    if op == BinaryOps.MAX:
-      return LazyBuffer(np.maximum(self._np, y._np))
-    else:
-      raise NotImplementedError(op)
+    if op == BinaryOps.MAX: return LazyBuffer(np.maximum(self._np, y._np))
+    else: raise NotImplementedError(op)
 
   def ternary_op(self, op, y:LazyBuffer, z:LazyBuffer):
-    if op == TernaryOps.WHERE:
-      return LazyBuffer(np.where(self._np, y._np, z._np))
-    else:
-      raise NotImplementedError(op)
+    if op == TernaryOps.WHERE: return LazyBuffer(np.where(self._np, y._np, z._np))
+    else: raise NotImplementedError(op)
 
   def reduce_op(self, op, new_shape):
-    if op == ReduceOps.SUM:
-      return LazyBuffer(self._np.sum(shape_to_axis(self.shape, new_shape), keepdims=True))
-    elif op == ReduceOps.MAX:
-      return LazyBuffer(self._np.max(shape_to_axis(self.shape, new_shape), keepdims=True))
-    else:
-      raise NotImplementedError(op)
+    if op == ReduceOps.SUM: return LazyBuffer(self._np.sum(shape_to_axis(self.shape, new_shape), keepdims=True))
+    elif op == ReduceOps.MAX: return LazyBuffer(self._np.max(shape_to_axis(self.shape, new_shape), keepdims=True))
+    else: raise NotImplementedError(op)
 
   def __add__(self, x:LazyBuffer): return LazyBuffer(self._np + x._np)
   def __sub__(self, x:LazyBuffer): return LazyBuffer(self._np - x._np)
