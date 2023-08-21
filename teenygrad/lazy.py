@@ -1,11 +1,12 @@
 from __future__ import annotations
 from typing import Tuple
 from teenygrad.helpers import dtypes
-from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, LoadOps
+from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
 
 class Device:
   DEFAULT = "CPU"
+  _buffers = ["CPU"]
   def canonicalize(x): return "CPU"
 
 def shape_to_axis(old_shape:Tuple[int, ...], new_shape:Tuple[int, ...]) -> Tuple[int, ...]:
@@ -58,6 +59,12 @@ class LazyBuffer:
   def binary_op(self, op, y:LazyBuffer):
     if op == BinaryOps.MAX:
       return LazyBuffer(np.maximum(self._np, y._np))
+    else:
+      raise NotImplementedError(op)
+
+  def ternary_op(self, op, y:LazyBuffer, z:LazyBuffer):
+    if op == TernaryOps.WHERE:
+      return LazyBuffer(np.where(self._np, y._np, z._np))
     else:
       raise NotImplementedError(op)
 
