@@ -28,3 +28,5 @@ class DType(NamedTuple):
 class dtypes:
   float32: Final[DType] = DType(4, 4, "float", np.float32)
   bool: Final[DType] = DType(0, 1, "bool", np.bool_)
+
+ImageDType, IMAGE = None, None  # junk to remove
