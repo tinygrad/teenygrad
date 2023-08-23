@@ -22,10 +22,10 @@ class DType(NamedTuple):
   np: Optional[type]  # TODO: someday this will be removed with the "remove numpy" project
   sz: int = 1
   def __repr__(self): return f"dtypes.{self.name}"
-  @property
-  def key(self): return (self.name)
 
 class dtypes:
+  @staticmethod
+  def is_float(x: DType) -> bool: return x == dtypes.float32
   float32: Final[DType] = DType(4, 4, "float", np.float32)
   bool: Final[DType] = DType(0, 1, "bool", np.bool_)
 
