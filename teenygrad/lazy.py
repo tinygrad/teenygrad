@@ -4,11 +4,6 @@ from teenygrad.helpers import dtypes
 from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
 
-class Device:
-  DEFAULT = "CPU"
-  _buffers = ["CPU"]
-  def canonicalize(x): return "CPU"
-
 def shape_to_axis(old_shape:Tuple[int, ...], new_shape:Tuple[int, ...]) -> Tuple[int, ...]:
   assert len(old_shape) == len(new_shape), "reduce shapes must have same dimensions"
   return tuple(i for i,(a,b) in enumerate(zip(old_shape, new_shape)) if a != b)
