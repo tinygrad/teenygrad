@@ -42,7 +42,8 @@ class LazyBuffer:
   def stride(self, arg): return LazyBuffer(self._np[tuple(slice(None, None, i) for i in arg)])
 
   def e(self, op, *srcs):
-    if op == UnaryOps.EXP2: return LazyBuffer(np.exp2(self._np))
+    if op == UnaryOps.NEG: return LazyBuffer(-self._np)
+    elif op == UnaryOps.EXP2: return LazyBuffer(np.exp2(self._np))
     elif op == UnaryOps.LOG2: return LazyBuffer(np.log2(self._np))
     elif op == UnaryOps.SIN: return LazyBuffer(np.sin(self._np))
     elif op == UnaryOps.SQRT: return LazyBuffer(np.sqrt(self._np))

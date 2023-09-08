@@ -27,6 +27,7 @@ class dtypes:
   @staticmethod
   def is_float(x: DType) -> bool: return x == dtypes.float32
   float32: Final[DType] = DType(4, 4, "float", np.float32)
+  int32: Final[DType] = DType(2, 1, "int32", np.int32)
   bool: Final[DType] = DType(0, 1, "bool", np.bool_)
 
 ImageDType, IMAGE = None, None  # junk to remove
