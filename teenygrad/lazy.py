@@ -4,10 +4,6 @@ from teenygrad.helpers import dtypes
 from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
 
-def shape_to_axis(old_shape:Tuple[int, ...], new_shape:Tuple[int, ...]) -> Tuple[int, ...]:
-  assert len(old_shape) == len(new_shape), "reduce shapes must have same dimensions"
-  return tuple(i for i,(a,b) in enumerate(zip(old_shape, new_shape)) if a != b)
-
 class LazyBuffer:
   device = "CPU"
   dtype = dtypes.float32
@@ -49,8 +45,10 @@ class LazyBuffer:
     else: raise NotImplementedError(op)
 
   def r(self, op, new_shape):
-    if op == ReduceOps.SUM: return LazyBuffer(self._np.sum(shape_to_axis(self.shape, new_shape), keepdims=True))
-    elif op == ReduceOps.MAX: return LazyBuffer(self._np.max(shape_to_axis(self.shape, new_shape), keepdims=True))
+    assert len(self.shape) == len(new_shape), "reduce shapes must have same dimensions"
+    axis = tuple(i for i,(a,b) in enumerate(zip(self.shape, new_shape)) if a != b)
+    if op == ReduceOps.SUM: return LazyBuffer(self._np.sum(axis, keepdims=True))
+    elif op == ReduceOps.MAX: return LazyBuffer(self._np.max(axis, keepdims=True))
     else: raise NotImplementedError(op)
 
   # MovementOps
