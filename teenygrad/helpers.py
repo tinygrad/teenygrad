@@ -1,4 +1,5 @@
-from typing import Union, Tuple, Iterator, NamedTuple, Optional, Final
+from typing import Union, Tuple, Iterator, NamedTuple, Optional, Final, Any
+from typing_extensions import TypeGuard
 import os, functools
 import numpy as np
 from math import prod # noqa: F401 # pylint:disable=unused-import
@@ -8,6 +9,7 @@ def argfix(*x): return tuple(x[0]) if x and x[0].__class__ in (tuple, list) else
 def make_pair(x:Union[int, Tuple[int, ...]], cnt=2) -> Tuple[int, ...]: return (x,)*cnt if isinstance(x, int) else x
 def flatten(l:Iterator): return [item for sublist in l for item in sublist]
 def argsort(x): return type(x)(sorted(range(len(x)), key=x.__getitem__)) # https://stackoverflow.com/questions/3382352/equivalent-of-numpy-argsort-in-basic-python
+def all_int(t: Tuple[Any, ...]) -> TypeGuard[Tuple[int, ...]]: return all(isinstance(s, int) for s in t)
 
 @functools.lru_cache(maxsize=None)
 def getenv(key, default=0): return type(default)(os.getenv(key, default))

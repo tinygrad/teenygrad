@@ -18,10 +18,7 @@ class LazyBuffer:
   @property
   def shape(self): return self._np.shape
 
-  def contiguous(x): return x
   def realize(x): return x
-
-  def const(self, x) -> LazyBuffer: return LazyBuffer(np.full_like(self._np, x))
 
   @staticmethod
   def fromCPU(x): return LazyBuffer(x)
@@ -33,13 +30,8 @@ class LazyBuffer:
     elif op == LoadOps.CONST: return LazyBuffer(np.full(shape, arg))
     else: raise NotImplementedError(op)
 
-  # MovementOps
-  def reshape(self, arg): return LazyBuffer(self._np.reshape(arg))
-  def expand(self, arg): return LazyBuffer(np.broadcast_to(self._np, arg))
-  def shrink(self, arg): return LazyBuffer(self._np[tuple(slice(p[0], p[1], None) for p in arg)])
-  def permute(self, arg): return LazyBuffer(self._np.transpose(arg))
-  def pad(self, arg): return LazyBuffer(np.pad(self._np, arg))
-  def stride(self, arg): return LazyBuffer(self._np[tuple(slice(None, None, i) for i in arg)])
+  def contiguous(x): return x
+  def const(self, x) -> LazyBuffer: return LazyBuffer(np.full_like(self._np, x))
 
   def e(self, op, *srcs):
     if op == UnaryOps.NEG: return LazyBuffer(-self._np)
@@ -56,7 +48,15 @@ class LazyBuffer:
     elif op == TernaryOps.WHERE: return LazyBuffer(np.where(self._np, srcs[0]._np, srcs[1]._np))
     else: raise NotImplementedError(op)
 
-  def reduce_op(self, op, new_shape):
+  def r(self, op, new_shape):
     if op == ReduceOps.SUM: return LazyBuffer(self._np.sum(shape_to_axis(self.shape, new_shape), keepdims=True))
     elif op == ReduceOps.MAX: return LazyBuffer(self._np.max(shape_to_axis(self.shape, new_shape), keepdims=True))
     else: raise NotImplementedError(op)
+
+  # MovementOps
+  def reshape(self, arg): return LazyBuffer(self._np.reshape(arg))
+  def expand(self, arg): return LazyBuffer(np.broadcast_to(self._np, arg))
+  def shrink(self, arg): return LazyBuffer(self._np[tuple(slice(p[0], p[1], None) for p in arg)])
+  def permute(self, arg): return LazyBuffer(self._np.transpose(arg))
+  def pad(self, arg): return LazyBuffer(np.pad(self._np, arg))
+  def stride(self, arg): return LazyBuffer(self._np[tuple(slice(None, None, i) for i in arg)])
