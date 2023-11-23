@@ -1,1 +1,0 @@
-sint = int
