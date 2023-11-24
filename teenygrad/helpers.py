@@ -36,6 +36,7 @@ class dtypes:
   float64: Final[DType] = DType(11, 8, "double", np.float64)
   int32: Final[DType] = DType(5, 4, "int", np.int32)
   int64: Final[DType] = DType(7, 8, "long", np.int64)
+  uint8: Final[DType] = DType(2, 1, "unsigned char", np.uint8)
   bool: Final[DType] = DType(0, 1, "bool", np.bool_)
 DTYPES_DICT = {k: v for k, v in dtypes.__dict__.items() if not k.startswith('__') and not callable(v) and not v.__class__ == staticmethod}
 
