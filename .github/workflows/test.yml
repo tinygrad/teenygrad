@@ -23,9 +23,22 @@ jobs:
     - name: Get code size
     - name: Train MNIST
       run: PYTHONPATH="." python mnist.py
-    - name: Install mypy + torch for testing
-      run: pip install mypy torch --extra-index-url https://download.pytorch.org/whl/cpu
-    - name: Test ops and dtype and optim
+
+  tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - name: Install deps with mypy torch for testing
+      run: pip install numpy tqdm mypy torch --extra-index-url https://download.pytorch.org/whl/cpu
+    - name: Test ops dtype optim
       run: |
         PYTHONPATH="." python test/test_ops.py
         PYTHONPATH="." python test/test_dtype.py
