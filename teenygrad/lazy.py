@@ -1,5 +1,5 @@
 from __future__ import annotations
-from teenygrad.helpers import DType, dtypes
+from teenygrad.helpers import DType, dtypes, DEBUG
 from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
 
@@ -18,6 +18,7 @@ class LazyBuffer:
   def realized(self): return RawCPUBuffer(self._np)
   @property
   def shape(self): return self._np.shape
+  def __repr__(self): return f"<LB {self.shape} {self.dtype}>"
 
   def schedule(self, seen=None): return []
   def is_unrealized_const(self): return False
@@ -35,27 +36,30 @@ class LazyBuffer:
   def contiguous(x): return x
   def const(self, x) -> LazyBuffer: return LazyBuffer(np.full_like(self._np, x))
 
-  def cast(self, dtype:DType, bitcast:bool=False): return LazyBuffer(self._np.astype(dtype.np))
+  def cast(self, dtype:DType, bitcast:bool=False): return LazyBuffer(self._np.view(dtype.np) if bitcast else self._np.astype(dtype.np))
 
   def e(self, op, *srcs:LazyBuffer):
-    if op == UnaryOps.NEG: return LazyBuffer(-self._np)
-    elif op == UnaryOps.EXP2: return LazyBuffer(np.exp2(self._np))
-    elif op == UnaryOps.LOG2: return LazyBuffer(np.log2(self._np))
-    elif op == UnaryOps.SIN: return LazyBuffer(np.sin(self._np))
-    elif op == UnaryOps.SQRT: return LazyBuffer(np.sqrt(self._np))
-    elif op == BinaryOps.ADD: return LazyBuffer(self._np + srcs[0]._np)
-    elif op == BinaryOps.SUB: return LazyBuffer(self._np - srcs[0]._np)
-    elif op == BinaryOps.MUL: return LazyBuffer(self._np * srcs[0]._np)
-    elif op == BinaryOps.DIV: return LazyBuffer((self._np / srcs[0]._np).astype(max(self.dtype, srcs[0].dtype).np))
-    elif op == BinaryOps.MAX: return LazyBuffer(np.maximum(self._np, srcs[0]._np))
-    elif op == BinaryOps.CMPLT: return LazyBuffer(self._np < srcs[0]._np)
-    elif op == TernaryOps.WHERE: return LazyBuffer(np.where(self._np, srcs[0]._np, srcs[1]._np))
+    if DEBUG >= 1: print(op, self, srcs)
+    if op == UnaryOps.NEG: ret = -self._np
+    elif op == UnaryOps.EXP2: ret = np.exp2(self._np)
+    elif op == UnaryOps.LOG2: ret = np.log2(self._np)
+    elif op == UnaryOps.SIN: ret = np.sin(self._np)
+    elif op == UnaryOps.SQRT: ret = np.sqrt(self._np)
+    elif op == BinaryOps.ADD: ret = self._np + srcs[0]._np
+    elif op == BinaryOps.SUB: ret = self._np - srcs[0]._np
+    elif op == BinaryOps.MUL: ret = self._np * srcs[0]._np
+    elif op == BinaryOps.DIV: ret = self._np / srcs[0]._np
+    elif op == BinaryOps.MAX: ret = np.maximum(self._np, srcs[0]._np)
+    elif op == BinaryOps.CMPLT: ret = self._np < srcs[0]._np
+    elif op == TernaryOps.WHERE: ret = np.where(self._np, srcs[0]._np, srcs[1]._np)
     else: raise NotImplementedError(op)
+    return LazyBuffer(ret.astype(self.dtype.np if len(srcs) == 0 else max(self.dtype, *[x.dtype for x in srcs]).np, copy=False))
 
   def r(self, op, new_shape):
+    if DEBUG >= 1: print(op, self, new_shape)
     assert len(self.shape) == len(new_shape), "reduce shapes must have same dimensions"
     axis = tuple(i for i,(a,b) in enumerate(zip(self.shape, new_shape)) if a != b)
-    if op == ReduceOps.SUM: return LazyBuffer(self._np.sum(axis, keepdims=True))
+    if op == ReduceOps.SUM: return LazyBuffer(self._np.sum(axis, dtype=self._np.dtype, keepdims=True))
     elif op == ReduceOps.MAX: return LazyBuffer(self._np.max(axis, keepdims=True))
     else: raise NotImplementedError(op)
 

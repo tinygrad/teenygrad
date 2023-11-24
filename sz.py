@@ -24,4 +24,6 @@ if __name__ == "__main__":
   for dir_name, group in itertools.groupby(sorted([(x[0].rsplit("/", 1)[0], x[1]) for x in table]), key=lambda x:x[0]):
     print(f"{dir_name:30s} : {sum([x[1] for x in group]):6d}")
 
-  print(f"\ntotal line count: {sum([x[1] for x in table])}")
+  total_line_count = sum([x[1] for x in table])
+  print(f"\ntotal line count: {total_line_count}")
+  assert total_line_count < 1000, "TEENYGRAD IS FUCKING TEENY IF YOU GO OVER 1000 LINES IN TEENYGRAD MIGHT AS WELL USE TINYGRAD U FAT FUCK"

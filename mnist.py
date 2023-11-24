@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
-from teenygrad.tensor import Tensor
+from teenygrad import Tensor
 from tqdm import trange
 import gzip, os
 
