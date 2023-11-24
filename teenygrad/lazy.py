@@ -4,21 +4,26 @@ from teenygrad.helpers import dtypes
 from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
 
+class RawCPUBuffer:
+  def __init__(self, x): self.x = x
+  def toCPU(self): return self.x
+
 class LazyBuffer:
   device = "CPU"
   dtype = dtypes.float32
-  realized = None
 
   def __init__(self, buf): self._np = buf
 
   @property
+  def realized(self): return RawCPUBuffer(self._np)
+  @property
   def shape(self): return self._np.shape
 
-  def realize(x): return x
+  def schedule(self, seen=None): return []
+  def is_unrealized_const(self): return False
 
   @staticmethod
   def fromCPU(x): return LazyBuffer(x)
-  def toCPU(self): return self._np
 
   @staticmethod
   def loadop(op, shape, dtype, device, arg=None, src=None) -> LazyBuffer:
