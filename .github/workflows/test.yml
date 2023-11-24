@@ -27,8 +27,8 @@ jobs:
       run: pip install mypy torch --extra-index-url https://download.pytorch.org/whl/cpu
     - name: Test ops / dtype / optim
       run: |
-       PYTHONPATH="." python test/test_ops.py
-       PYTHONPATH="." python test/test_dtype.py
-       PYTHONPATH="." python test/test_optim.py
+        PYTHONPATH="." python test/test_ops.py
+        PYTHONPATH="." python test/test_dtype.py
+        PYTHONPATH="." python test/test_optim.py
     - name: Check types with mypy
       run: mypy
