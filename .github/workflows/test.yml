@@ -20,8 +20,6 @@ jobs:
         python-version: 3.11
     - name: Install Dependencies
       run: pip install numpy tqdm
-    - name: Get code size
-      run: PYTHONPATH="." python sz.py
     - name: Train MNIST
       run: PYTHONPATH="." python mnist.py
 
@@ -37,8 +35,10 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: 3.11
-    - name: Install deps with mypy torch for testing
-      run: pip install numpy tqdm mypy torch --extra-index-url https://download.pytorch.org/whl/cpu
+    - name: Install deps with testing deps
+      run: pip install numpy tqdm mypy torch pytest tabulate --extra-index-url https://download.pytorch.org/whl/cpu
+    - name: Get code size
+      run: PYTHONPATH="." python sz.py
     - name: Test ops dtype optim
       run: |
         PYTHONPATH="." python test/test_ops.py
