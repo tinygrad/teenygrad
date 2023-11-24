@@ -20,5 +20,7 @@ jobs:
         python-version: 3.11
     - name: Install Dependencies
       run: pip install numpy tqdm
+    - name: Test Ops
+      run: PYTHONPATH="." python test/test_ops.py
     - name: Train MNIST
       run: PYTHONPATH="." python mnist.py

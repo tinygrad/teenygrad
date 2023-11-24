@@ -1,6 +1,5 @@
 from __future__ import annotations
-from typing import Tuple
-from teenygrad.helpers import dtypes
+from teenygrad.helpers import DType, dtypes
 from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
 
@@ -10,10 +9,11 @@ class RawCPUBuffer:
 
 class LazyBuffer:
   device = "CPU"
-  dtype = dtypes.float32
 
-  def __init__(self, buf): self._np = buf
+  def __init__(self, buf: np.ndarray): self._np = buf
 
+  @property
+  def dtype(self): return dtypes.from_np(self._np.dtype)
   @property
   def realized(self): return RawCPUBuffer(self._np)
   @property
@@ -27,14 +27,17 @@ class LazyBuffer:
 
   @staticmethod
   def loadop(op, shape, dtype, device, arg=None, src=None) -> LazyBuffer:
-    if op == LoadOps.RAND: return LazyBuffer(np.random.default_rng(arg).random(size=shape, dtype=np.float32))
-    elif op == LoadOps.CONST: return LazyBuffer(np.full(shape, arg))
+    if op == LoadOps.RAND: return LazyBuffer(np.random.default_rng(arg).random(size=shape, dtype=dtype.np))
+    elif op == LoadOps.CONST: return LazyBuffer(np.full(shape, arg, dtype=dtype.np))
+    elif op == LoadOps.EMPTY: return LazyBuffer(np.empty(shape, dtype=dtype.np))
     else: raise NotImplementedError(op)
 
   def contiguous(x): return x
   def const(self, x) -> LazyBuffer: return LazyBuffer(np.full_like(self._np, x))
 
-  def e(self, op, *srcs):
+  def cast(self, dtype:DType, bitcast:bool=False): return LazyBuffer(self._np.astype(dtype.np))
+
+  def e(self, op, *srcs:LazyBuffer):
     if op == UnaryOps.NEG: return LazyBuffer(-self._np)
     elif op == UnaryOps.EXP2: return LazyBuffer(np.exp2(self._np))
     elif op == UnaryOps.LOG2: return LazyBuffer(np.log2(self._np))
@@ -43,7 +46,7 @@ class LazyBuffer:
     elif op == BinaryOps.ADD: return LazyBuffer(self._np + srcs[0]._np)
     elif op == BinaryOps.SUB: return LazyBuffer(self._np - srcs[0]._np)
     elif op == BinaryOps.MUL: return LazyBuffer(self._np * srcs[0]._np)
-    elif op == BinaryOps.DIV: return LazyBuffer(self._np / srcs[0]._np)
+    elif op == BinaryOps.DIV: return LazyBuffer((self._np / srcs[0]._np).astype(max(self.dtype, srcs[0].dtype).np))
     elif op == BinaryOps.MAX: return LazyBuffer(np.maximum(self._np, srcs[0]._np))
     elif op == BinaryOps.CMPLT: return LazyBuffer(self._np < srcs[0]._np)
     elif op == TernaryOps.WHERE: return LazyBuffer(np.where(self._np, srcs[0]._np, srcs[1]._np))

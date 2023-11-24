@@ -2,6 +2,7 @@ from typing import Union, Tuple, Iterator, NamedTuple, Optional, Final, Any
 import os, functools
 import numpy as np
 from math import prod # noqa: F401 # pylint:disable=unused-import
+from dataclasses import dataclass
 
 def dedup(x): return list(dict.fromkeys(x))   # retains list orderi
 def argfix(*x): return tuple(x[0]) if x and x[0].__class__ in (tuple, list) else x
@@ -17,7 +18,8 @@ def getenv(key, default=0): return type(default)(os.getenv(key, default))
 DEBUG = getenv("DEBUG")
 CI = os.getenv("CI", "") != ""
 
-class DType(NamedTuple):
+@dataclass(frozen=True, order=True)
+class DType:
   priority: int  # this determines when things get upcasted
   itemsize: int
   name: str
@@ -29,10 +31,12 @@ class dtypes:
   @staticmethod
   def from_np(x) -> DType: return DTYPES_DICT[np.dtype(x).name]
   @staticmethod
-  def is_float(x: DType) -> bool: return x == dtypes.float32
-  float32: Final[DType] = DType(4, 4, "float", np.float32)
-  int32: Final[DType] = DType(2, 1, "int32", np.int32)
+  def is_float(x: DType) -> bool: return x in (dtypes.float32, dtypes.float64)
+  float32: Final[DType] = DType(10, 4, "float", np.float32)
+  float64: Final[DType] = DType(11, 8, "double", np.float64)
+  int32: Final[DType] = DType(5, 4, "int", np.int32)
+  int64: Final[DType] = DType(7, 8, "long", np.int64)
   bool: Final[DType] = DType(0, 1, "bool", np.bool_)
 DTYPES_DICT = {k: v for k, v in dtypes.__dict__.items() if not k.startswith('__') and not callable(v) and not v.__class__ == staticmethod}
 
-ImageDType, IMAGE = None, None  # junk to remove
+ImageDType, IMAGE = None, 0  # junk to remove
