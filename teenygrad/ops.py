@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from typing import Optional
 
 class UnaryOps(Enum): NOOP = auto(); EXP2 = auto(); LOG2 = auto(); CAST = auto(); SIN = auto(); SQRT = auto(); RECIP = auto(); NEG = auto() # noqa: E702
 class BinaryOps(Enum): ADD = auto(); SUB = auto(); MUL = auto(); DIV = auto(); MAX = auto(); MOD = auto(); CMPLT = auto() # noqa: E702
@@ -10,4 +11,5 @@ class LoadOps(Enum): EMPTY = auto(); RAND = auto(); CONST = auto(); FROM = auto(
 class Device:
   DEFAULT = "CPU"
   _buffers = ["CPU"]
-  def canonicalize(x): return "CPU"
+  @staticmethod
+  def canonicalize(device:Optional[str]) -> str: return "CPU"

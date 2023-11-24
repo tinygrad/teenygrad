@@ -13,6 +13,8 @@ class LazyBuffer:
   def __init__(self, buf: np.ndarray): self._np = buf
 
   @property
+  def base(self): return self
+  @property
   def dtype(self): return dtypes.from_np(self._np.dtype)
   @property
   def realized(self): return RawCPUBuffer(self._np)
@@ -21,7 +23,8 @@ class LazyBuffer:
   def __repr__(self): return f"<LB {self.shape} {self.dtype}>"
 
   def schedule(self, seen=None): return []
-  def is_unrealized_const(self): return False
+  def is_unrealized_contiguous_const(self): return False
+  def copy_to_device(self, device:str) -> LazyBuffer: return self
 
   @staticmethod
   def fromCPU(x): return LazyBuffer(x)
