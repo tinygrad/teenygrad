@@ -25,7 +25,7 @@ jobs:
       run: PYTHONPATH="." python mnist.py
     - name: Install mypy + torch for testing
       run: pip install mypy torch --extra-index-url https://download.pytorch.org/whl/cpu
-    - name: Test ops / dtype / optim
+    - name: Test ops and dtype and optim
       run: |
         PYTHONPATH="." python test/test_ops.py
         PYTHONPATH="." python test/test_dtype.py

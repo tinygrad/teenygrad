@@ -1,9 +1,21 @@
 repos:
   - repo: local
     hooks:
-      - id: tests
-        name: tests
-        entry: env PYTHONPATH="." pytest test/
+      - id: test ops
+        name: test ops
+        entry: env PYTHONPATH="." python test/test_ops.py
+        language: system
+        always_run: true
+        pass_filenames: false
+      - id: test dtype
+        name: test dtype
+        entry: env PYTHONPATH="." python test/test_dtype.py
+        language: system
+        always_run: true
+        pass_filenames: false
+      - id: test optim
+        name: test optim
+        entry: env PYTHONPATH="." python test/test_optim.py
         language: system
         always_run: true
         pass_filenames: false
