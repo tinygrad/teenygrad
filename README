@@ -3,8 +3,8 @@ teenygrad is <1000 line MNIST trainer
 It shares 90% of its code with tinygrad,
 so understanding teenygrad is a good step to understanding tinygrad.
 
-While it supports most of tinygrad's functionality,
-the extra 3k lines in tinygrad get you speed and diverse backend support.
+While it supports almost all of tinygrad's functionality,
+the extra 4k lines in tinygrad get you speed and diverse backend support.
 
 tensor.py and mlops.py are both tinygrad's and teenygrad's frontend.
 lazy.py is a replacement for all of tinygrad's backend.

@@ -20,11 +20,13 @@ jobs:
         python-version: 3.11
     - name: Install Dependencies
       run: pip install numpy tqdm
+    - name: Get code size
     - name: Train MNIST
       run: PYTHONPATH="." python mnist.py
     - name: Install torch for testing
       run: pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
-    - name: Test Ops and DTypes
+    - name: Test ops / dtype / optim
       run: |
        PYTHONPATH="." python test/test_ops.py
-       PYTHONPATH="." python test/test_dtypes.py
+       PYTHONPATH="." python test/test_dtype.py
+       PYTHONPATH="." python test/test_optim.py
