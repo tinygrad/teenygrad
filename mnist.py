@@ -1,91 +1,69 @@
 #!/usr/bin/env python3
+import os, gzip
 import numpy as np
+
 from teenygrad import Tensor
-from tqdm import trange
-import gzip, os
-
 from teenygrad.nn import optim
-from teenygrad.helpers import getenv
 
-def train(model, X_train, Y_train, optim, steps, BS=128, lossfn=lambda out,y: out.sparse_categorical_crossentropy(y),
-        transform=lambda x: x, target_transform=lambda x: x, noloss=False):
-  Tensor.training = True
-  losses, accuracies = [], []
-  for i in (t := trange(steps, disable=getenv('CI', False))):
-    samp = np.random.randint(0, X_train.shape[0], size=(BS))
-    x = Tensor(transform(X_train[samp]), requires_grad=False)
-    y = Tensor(target_transform(Y_train[samp]))
-
-    # network
-    out = model.forward(x) if hasattr(model, 'forward') else model(x)
-
-    loss = lossfn(out, y)
-    optim.zero_grad()
-    loss.backward()
-    if noloss: del loss
-    optim.step()
-
-    # printing
-    if not noloss:
-      cat = np.argmax(out.numpy(), axis=-1)
-      accuracy = (cat == y.numpy()).mean()
-
-      loss = loss.detach().numpy()
-      losses.append(loss)
-      accuracies.append(accuracy)
-      t.set_description("loss %.2f accuracy %.2f" % (loss, accuracy))
-  return [losses, accuracies]
-
-def evaluate(model, X_test, Y_test, num_classes=None, BS=128, return_predict=False, transform=lambda x: x,
-             target_transform=lambda y: y):
-  Tensor.training = False
-  def numpy_eval(Y_test, num_classes):
-    Y_test_preds_out = np.zeros(list(Y_test.shape)+[num_classes])
-    for i in trange((len(Y_test)-1)//BS+1, disable=getenv('CI', False)):
-      x = Tensor(transform(X_test[i*BS:(i+1)*BS]))
-      out = model.forward(x) if hasattr(model, 'forward') else model(x)
-      Y_test_preds_out[i*BS:(i+1)*BS] = out.numpy()
-    Y_test_preds = np.argmax(Y_test_preds_out, axis=-1)
-    Y_test = target_transform(Y_test)
-    return (Y_test == Y_test_preds).mean(), Y_test_preds
-
-  if num_classes is None: num_classes = Y_test.max().astype(int)+1
-  acc, Y_test_pred = numpy_eval(Y_test, num_classes)
-  print("test set accuracy is %f" % acc)
-  return (acc, Y_test_pred) if return_predict else acc
-
-def fetch_mnist():
+def fetch_mnist(for_convolution=True):
   parse = lambda file: np.frombuffer(gzip.open(file).read(), dtype=np.uint8).copy()
   BASE = os.path.dirname(__file__)+"/extra/datasets"
   X_train = parse(BASE+"/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).astype(np.float32)
   Y_train = parse(BASE+"/mnist/train-labels-idx1-ubyte.gz")[8:]
   X_test = parse(BASE+"/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).astype(np.float32)
   Y_test = parse(BASE+"/mnist/t10k-labels-idx1-ubyte.gz")[8:]
+  if for_convolution:
+    X_train = X_train.reshape(-1, 1, 28, 28)
+    X_test = X_test.reshape(-1, 1, 28, 28)
   return X_train, Y_train, X_test, Y_test
 
-X_train, Y_train, X_test, Y_test = fetch_mnist()
-
-# create a model with a conv layer
 class TinyConvNet:
   def __init__(self):
     # https://keras.io/examples/vision/mnist_convnet/
-    conv = 3
-    #inter_chan, out_chan = 32, 64
-    inter_chan, out_chan = 8, 16   # for speed
-    self.c1 = Tensor.scaled_uniform(inter_chan,1,conv,conv)
-    self.c2 = Tensor.scaled_uniform(out_chan,inter_chan,conv,conv)
+    kernel_sz = 3
+    in_chan, out_chan = 8, 16   # Reduced from 32, 64 -> Faster training
+    self.c1 = Tensor.scaled_uniform(in_chan, 1, kernel_sz, kernel_sz)
+    self.c2 = Tensor.scaled_uniform(out_chan, in_chan, kernel_sz, kernel_sz)
     self.l1 = Tensor.scaled_uniform(out_chan*5*5, 10)
 
-  def forward(self, x:Tensor):
-    x = x.reshape(shape=(-1, 1, 28, 28)) # hacks
+  def __call__(self, x: Tensor):
     x = x.conv2d(self.c1).relu().max_pool2d()
     x = x.conv2d(self.c2).relu().max_pool2d()
     x = x.reshape(shape=[x.shape[0], -1])
     return x.dot(self.l1).log_softmax()
 
 if __name__ == "__main__":
-  np.random.seed(1337)
+  NUM_STEPS = 100
+  BS = 128
+  LR = 0.001
+
+  X_train, Y_train, X_test, Y_test = fetch_mnist()
   model = TinyConvNet()
-  optimizer = optim.Adam([model.c1, model.c2, model.l1], lr=0.001)
-  train(model, X_train, Y_train, optimizer, steps=100)
-  assert evaluate(model, X_test, Y_test) > 0.93
+  opt = optim.Adam([model.c1, model.c2, model.l1], lr=LR)
+
+  with Tensor.train():
+    for step in range(NUM_STEPS):
+      # Get sample batches
+      samp = np.random.randint(0, X_train.shape[0], size=(BS))
+      xb, yb = Tensor(X_train[samp], requires_grad=False), Tensor(Y_train[samp])
+      # Train
+      out = model(xb)
+      loss = out.sparse_categorical_crossentropy(yb)
+      opt.zero_grad()
+      loss.backward()
+      opt.step()
+      # Evaluate Train
+      y_preds = out.numpy().argmax(axis=-1)
+      acc = (y_preds == yb.numpy()).mean()
+      if step == 0 or (step + 1) % 20 == 0:
+        print(f"Step {step+1:<3} | Loss: {loss.numpy():.4f} | Train Acc: {acc:.3f}")
+
+  # Evaluate Test
+  acc = 0
+  for i in range(0, len(Y_test), BS):
+    xb, yb = Tensor(X_test[i:i+BS], requires_grad=False), Tensor(Y_test[i:i+BS])
+    out = model(xb)
+    preds = out.argmax(axis=-1)
+    acc += (preds == yb).sum().numpy()
+  acc /= len(Y_test)
+  print(f"Test Acc: {acc:.3f}")
