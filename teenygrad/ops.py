@@ -1,12 +1,12 @@
 from enum import Enum, auto
 from typing import Optional
 
-class UnaryOps(Enum): NOOP = auto(); EXP2 = auto(); LOG2 = auto(); CAST = auto(); SIN = auto(); SQRT = auto(); RECIP = auto(); NEG = auto() # noqa: E702
-class BinaryOps(Enum): ADD = auto(); SUB = auto(); MUL = auto(); DIV = auto(); MAX = auto(); MOD = auto(); CMPLT = auto() # noqa: E702
-class ReduceOps(Enum): SUM = auto(); MAX = auto() # noqa: E702
-class TernaryOps(Enum): MULACC = auto(); WHERE = auto() # noqa: E702
-class MovementOps(Enum): RESHAPE = auto(); PERMUTE = auto(); EXPAND = auto(); PAD = auto(); SHRINK = auto(); STRIDE = auto() # noqa: E702
-class LoadOps(Enum): EMPTY = auto(); RAND = auto(); CONST = auto(); FROM = auto(); CONTIGUOUS = auto(); CUSTOM = auto() # noqa: E702
+class UnaryOps(Enum): NOOP, EXP2, LOG2, CAST, SIN, SQRT, RECIP, NEG = range(1, 9) # noqa: E702
+class BinaryOps(Enum): ADD, SUB, MUL, DIV, MAX, MOD, CMPLT = range(1, 8) # noqa: E702
+class ReduceOps(Enum): SUM, MAX = range(1, 3) # noqa: E702
+class TernaryOps(Enum): MULACC, WHERE = range(1, 3) # noqa: E702
+class MovementOps(Enum): RESHAPE, PERMUTE, EXPAND, PAD, SHRINK, STRIDE = range(1, 7) # noqa: E702
+class LoadOps(Enum): EMPTY, RAND, CONST, FROM, CONTIGUOUS, CUSTOM = range(1, 7) # noqa: E702
 
 class Device:
   DEFAULT = "CPU"
