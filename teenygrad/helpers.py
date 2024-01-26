@@ -5,7 +5,7 @@ from math import prod # noqa: F401 # pylint:disable=unused-import
 from dataclasses import dataclass
 
 OSX = platform.system() == "Darwin"
-def dedup(x): return list(dict.fromkeys(x))   # retains list orderi
+def dedup(x): return list(dict.fromkeys(x))   # retains list ordering
 def argfix(*x): return tuple(x[0]) if x and x[0].__class__ in (tuple, list) else x
 def make_pair(x:Union[int, Tuple[int, ...]], cnt=2) -> Tuple[int, ...]: return (x,)*cnt if isinstance(x, int) else x
 def flatten(l:Iterator): return [item for sublist in l for item in sublist]
