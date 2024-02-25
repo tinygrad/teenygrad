@@ -4,7 +4,7 @@ import math
 import numpy as np
 import unittest
 from teenygrad.tensor import Tensor
-from teenygrad.helpers import getenv, IMAGE, DEBUG, CI, dtypes
+from teenygrad.helpers import getenv, DEBUG, CI, dtypes
 from teenygrad.ops import Device
 
 if CI:
@@ -402,7 +402,6 @@ class TestOps(unittest.TestCase):
       return x*torch.tanh(torch.nn.functional.softplus(x))
     helper_test_op([(45,65)], _mish_pytorch, Tensor.mish, atol=1e-4)
     helper_test_op([()], _mish_pytorch, Tensor.mish, atol=1e-4)
-  @unittest.skipIf(IMAGE>0, "no 1d dot for images")
   def test_dot_1d(self):
     helper_test_op([(65), (65)], lambda x,y: x.matmul(y), Tensor.dot, atol=1e-4)
     helper_test_op([(65), (65,45)], lambda x,y: x.matmul(y), Tensor.dot, atol=1e-4)
@@ -454,11 +453,9 @@ class TestOps(unittest.TestCase):
   def test_matmul(self):
     helper_test_op([(64), (64,99)], lambda x,y: x.matmul(y), Tensor.dot, atol=1e-4)
 
-  @unittest.skipIf(IMAGE>0, "no batched matmul on images")
   def test_matmul_batched(self):
     helper_test_op([(3), (1,3,3,5)], lambda x,y: x.matmul(y), Tensor.dot, atol=1e-4)
 
-  @unittest.skipIf(IMAGE>0, "no batched matmul on images")
   def test_matmul_batched_vector(self):
     helper_test_op([(4,3), (1,3,3,5)], lambda x,y: x.matmul(y), Tensor.dot, atol=1e-4)
   def test_small_gemm(self):
@@ -786,13 +783,11 @@ class TestOps(unittest.TestCase):
       lambda x,w: torch.nn.functional.conv2d(x,w).relu(),
       lambda x,w: Tensor.conv2d(x,w).relu(), atol=1e-4, grad_rtol=1e-5)
 
-  @unittest.skipIf(IMAGE>0, "no conv3d on images")
   def test_simple_conv3d(self):
     helper_test_op([(1,4,9,9,9), (4,4,3,3,3)],
       lambda x,w: torch.nn.functional.conv3d(x,w).relu(),
       lambda x,w: Tensor.conv2d(x,w).relu(), atol=1e-4, grad_rtol=1e-5)
 
-  @unittest.skipIf(IMAGE>0, "no conv3d on images")
   def test_padded_conv3d(self):
     helper_test_op([(1,4,9,9,9), (4,4,3,3,3)],
       lambda x,w: torch.nn.functional.conv3d(x,w,padding=1).relu(),
@@ -872,13 +867,11 @@ class TestOps(unittest.TestCase):
         lambda x,w,b: torch.nn.functional.conv_transpose2d(x,w,b,output_padding=output_padding,stride=stride).relu(),
         lambda x,w,b: Tensor.conv_transpose2d(x,w,b,output_padding=output_padding,stride=stride).relu(), atol=1e-4, grad_rtol=1e-5)
 
-  @unittest.skipIf(IMAGE>0, "no conv3d on images")
   def test_simple_conv_transpose3d(self):
     helper_test_op([(2,4,9,9,9), (4,4,3,3,3)],
       lambda x,w: torch.nn.functional.conv_transpose3d(x,w).relu(),
       lambda x,w: Tensor.conv_transpose2d(x,w).relu(), atol=1e-4, grad_rtol=1e-5)
 
-  @unittest.skipIf((IMAGE>0), "no conv1d on images")
   def test_conv1d(self):
     for bs in [1,8]:
       for cin in [1,3]:
@@ -889,7 +882,6 @@ class TestOps(unittest.TestCase):
                 lambda x,w: torch.nn.functional.conv1d(x,w,groups=groups).relu(),
                 lambda x,w: Tensor.conv2d(x,w,groups=groups).relu(), atol=1e-4, grad_rtol=1e-5)
 
-  @unittest.skipIf(IMAGE>0, "no conv1d on images")
   def test_simple_padding_conv1d(self):
     bs = 6
     cin = 2
@@ -900,14 +892,12 @@ class TestOps(unittest.TestCase):
       lambda x,w: torch.nn.functional.conv1d(torch.nn.functional.pad(x, p),w).relu(),
       lambda x,w: Tensor.conv2d(x,w,padding=p).relu(), atol=1e-4)
 
-  @unittest.skipIf(IMAGE>0, "no conv1d on images")
   def test_strided_conv1d_simple(self):
     bs, H = 2, 3
     helper_test_op([(bs,1,5), (1,1,H)],
       lambda x,w: torch.nn.functional.conv1d(x,w,stride=2).relu(),
       lambda x,w: Tensor.conv2d(x,w,stride=2).relu(), atol=1e-4)
 
-  @unittest.skipIf(IMAGE>0, "no conv1d on images")
   def test_asymmetric_padding_conv1d(self):
     for p in [(0,1), (2,1), (2,0)]:
       with self.subTest(padding := p):

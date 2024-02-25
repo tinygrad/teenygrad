@@ -7,7 +7,7 @@ from functools import partialmethod, reduce
 from itertools import accumulate
 import numpy as np
 
-from teenygrad.helpers import ImageDType, argfix, make_pair, getenv, IMAGE, DEBUG, flatten, DType, dtypes, prod, all_int, round_up
+from teenygrad.helpers import argfix, make_pair, getenv, DEBUG, flatten, DType, dtypes, prod, all_int, round_up
 from teenygrad.lazy import LazyBuffer
 from teenygrad.ops import Device, LoadOps
 from teenygrad.shape.symbolic import sint
@@ -658,7 +658,7 @@ class Tensor:
     x: Tensor = self
     if not isinstance(y, Tensor):
       if 0 in x.shape: return x, x.full_like(y)
-      y = Tensor(y, device=self.device, requires_grad=False, dtype=self.dtype if self.dtype != dtypes.bool and self.dtype.__class__ is not ImageDType else dtypes.float32)
+      y = Tensor(y, device=self.device, requires_grad=False, dtype=self.dtype if self.dtype != dtypes.bool else dtypes.float32)
     if reverse: x, y = y, x
     if (xshape:=x.shape) == (yshape:=y.shape): return (x, y)
 
@@ -816,9 +816,3 @@ class Tensor:
 
 # register functions to move between devices
 for device in Device._buffers: setattr(Tensor, f"{device.lower()}", partialmethod(Tensor.to, device))
-
-if IMAGE:
-  # if IMAGE>0 we install these replacement functions in Tensor (hack!)
-  from teenygrad.features.image import image_conv2d, image_dot
-  setattr(Tensor, "conv2d", image_conv2d)
-  setattr(Tensor, "dot", image_dot)
