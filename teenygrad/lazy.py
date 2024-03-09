@@ -1,6 +1,6 @@
 from __future__ import annotations
 from teenygrad.helpers import DEBUG, prod
-from teenygrad.dtype import DType, dtypes
+from teenygrad.dtype import DType, dtypes, least_upper_dtype
 from teenygrad.device import Buffer
 from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
@@ -18,12 +18,13 @@ class LazyBuffer:
   @property
   def dtype(self): return self.realized.dtype
   @property
-  def _np(self): return self.realized._buf
+  def _np(self):
+    if self.realized._buf is None: return np.array([], dtype=self.realized.dtype.np).reshape((0,))
+    return self.realized._buf
   @property
-  def shape(self): return self.realized._buf.shape
+  def shape(self): return self._np.shape
   def __repr__(self): return f"<LB {self.shape} {self.dtype}>"
 
-  def schedule(self, seen=None): return []
   def is_unrealized_contiguous_const(self): return False
   def copy_to_device(self, device:str) -> LazyBuffer: return self
 
@@ -31,12 +32,12 @@ class LazyBuffer:
   def fromCPU(x): return LazyBuffer(x)
 
   @staticmethod
-  def loadop(op, shape, dtype, device, arg=None, src=None) -> LazyBuffer:
+  def loadop(op, shape, dtype, device, arg=None, src=None, _buf=None) -> LazyBuffer:
     if op == LoadOps.CUSTOM:
       arg(ret := Buffer(device, prod(shape), dtype))
       return ret._buf.reshape(shape)
     elif op == LoadOps.CONST: return LazyBuffer(np.full(shape, arg, dtype=dtype.np))
-    elif op == LoadOps.EMPTY: return LazyBuffer(np.empty(shape, dtype=dtype.np))
+    elif op == LoadOps.EMPTY: return LazyBuffer(_buf._buf if device == "EXT" and prod(shape) != 0 else np.empty(shape, dtype=dtype.np))
     else: raise NotImplementedError(op)
 
   def contiguous(x): return x
@@ -61,7 +62,8 @@ class LazyBuffer:
     elif op == BinaryOps.CMPEQ: ret = self._np == srcs[0]._np
     elif op == TernaryOps.WHERE: ret = np.where(self._np, srcs[0]._np, srcs[1]._np)
     else: raise NotImplementedError(op)
-    return LazyBuffer(ret.astype(self.dtype.np if len(srcs) == 0 else max(self.dtype, *[x.dtype for x in srcs]).np, copy=False))
+    new_type = least_upper_dtype(self.dtype, *[x.dtype for x in srcs]) if op not in (BinaryOps.CMPLT, BinaryOps.CMPEQ) else dtypes.bool
+    return LazyBuffer(ret.astype(new_type.np, copy=False))
 
   def r(self, op, axis):
     if DEBUG >= 1: print(op, self, axis)
