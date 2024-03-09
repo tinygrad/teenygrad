@@ -1,5 +1,7 @@
 from __future__ import annotations
-from teenygrad.helpers import DType, dtypes, DEBUG
+from teenygrad.helpers import DEBUG, prod
+from teenygrad.dtype import DType, dtypes
+from teenygrad.device import Buffer
 from teenygrad.ops import UnaryOps, BinaryOps, ReduceOps, TernaryOps, LoadOps
 import numpy as np
 
@@ -9,17 +11,16 @@ class RawCPUBuffer:
 
 class LazyBuffer:
   device = "CPU"
-
-  def __init__(self, buf: np.ndarray): self._np = buf
+  def __init__(self, buf: np.ndarray): self.realized = Buffer("CPU", buf.size, dtypes.from_np(buf.dtype), buf)
 
   @property
   def base(self): return self
   @property
-  def dtype(self): return dtypes.from_np(self._np.dtype)
+  def dtype(self): return self.realized.dtype
   @property
-  def realized(self): return RawCPUBuffer(self._np)
+  def _np(self): return self.realized._buf
   @property
-  def shape(self): return self._np.shape
+  def shape(self): return self.realized._buf.shape
   def __repr__(self): return f"<LB {self.shape} {self.dtype}>"
 
   def schedule(self, seen=None): return []
@@ -31,7 +32,9 @@ class LazyBuffer:
 
   @staticmethod
   def loadop(op, shape, dtype, device, arg=None, src=None) -> LazyBuffer:
-    if op == LoadOps.RAND: return LazyBuffer(np.random.default_rng(arg).random(size=shape, dtype=dtype.np))
+    if op == LoadOps.CUSTOM:
+      arg(ret := Buffer(device, prod(shape), dtype))
+      return ret._buf.reshape(shape)
     elif op == LoadOps.CONST: return LazyBuffer(np.full(shape, arg, dtype=dtype.np))
     elif op == LoadOps.EMPTY: return LazyBuffer(np.empty(shape, dtype=dtype.np))
     else: raise NotImplementedError(op)
@@ -52,16 +55,16 @@ class LazyBuffer:
     elif op == BinaryOps.SUB: ret = self._np - srcs[0]._np
     elif op == BinaryOps.MUL: ret = self._np * srcs[0]._np
     elif op == BinaryOps.DIV: ret = self._np / srcs[0]._np
+    elif op == BinaryOps.XOR: ret = self._np ^ srcs[0]._np
     elif op == BinaryOps.MAX: ret = np.maximum(self._np, srcs[0]._np)
     elif op == BinaryOps.CMPLT: ret = self._np < srcs[0]._np
+    elif op == BinaryOps.CMPEQ: ret = self._np == srcs[0]._np
     elif op == TernaryOps.WHERE: ret = np.where(self._np, srcs[0]._np, srcs[1]._np)
     else: raise NotImplementedError(op)
     return LazyBuffer(ret.astype(self.dtype.np if len(srcs) == 0 else max(self.dtype, *[x.dtype for x in srcs]).np, copy=False))
 
-  def r(self, op, new_shape):
-    if DEBUG >= 1: print(op, self, new_shape)
-    assert len(self.shape) == len(new_shape), "reduce shapes must have same dimensions"
-    axis = tuple(i for i,(a,b) in enumerate(zip(self.shape, new_shape)) if a != b)
+  def r(self, op, axis):
+    if DEBUG >= 1: print(op, self, axis)
     if op == ReduceOps.SUM: return LazyBuffer(self._np.sum(axis, dtype=self._np.dtype, keepdims=True))
     elif op == ReduceOps.MAX: return LazyBuffer(self._np.max(axis, keepdims=True))
     else: raise NotImplementedError(op)
