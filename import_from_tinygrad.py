@@ -8,6 +8,7 @@ dest = pathlib.Path("teenygrad")
 for f in FILES:
   print("importing", f)
   rd = open(src/f).read()
+  rd = rd.replace("from tinygrad ", "from teenygrad ")
   rd = rd.replace("from tinygrad.", "from teenygrad.")
   rd = rd.replace("import tinygrad.", "import teenygrad.")
   (dest/f).parent.mkdir(parents=True, exist_ok=True)

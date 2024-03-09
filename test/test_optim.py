@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import unittest
-from tinygrad import Tensor, Device
+from teenygrad import Tensor, Device
 from teenygrad.nn.optim import Adam, SGD, AdamW
 from teenygrad.helpers import CI
 

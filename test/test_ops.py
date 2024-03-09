@@ -2,7 +2,7 @@ import time, math, unittest
 import numpy as np
 import torch
 from teenygrad.helpers import getenv, IMAGE, DEBUG, CI
-from tinygrad import Tensor, Device, dtypes
+from teenygrad import Tensor, Device, dtypes
 
 if CI:
   import warnings

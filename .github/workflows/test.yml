@@ -36,7 +36,7 @@ jobs:
       with:
         python-version: 3.11
     - name: Install deps with testing deps
-      run: pip install numpy tqdm mypy torch pytest tabulate --extra-index-url https://download.pytorch.org/whl/cpu
+      run: pip install numpy tqdm mypy torch pytest tabulate hypothesis --extra-index-url https://download.pytorch.org/whl/cpu
     - name: Test ops dtype optim
       run: |
         PYTHONPATH="." python test/test_ops.py
