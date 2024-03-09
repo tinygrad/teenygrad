@@ -1,0 +1,36 @@
+indent-width = 2
+
+lint.select = [
+  "F",
+  "W6",
+  "E71",
+  "E72",
+  "E112",   # no-indented-block
+  "E113",   # unexpected-indentation
+  # "E124",
+  "E203",   # whitespace-before-punctuation
+  "E272",   # multiple-spaces-before-keyword
+  # "E303",
+  # "E304",
+  "E501",   # line-too-long
+  # "E502",
+  "E702",   # multiple-statements-on-one-line-semicolon
+  "E703",   # useless-semicolon
+  "E731",   # lambda-assignment
+  "W191",   # tab-indentation
+  "W291",   # trailing-whitespace
+  "W293",   # blank-line-with-whitespace
+  "UP039",  # unnecessary-class-parentheses
+]
+
+line-length = 150
+
+exclude = [
+  "disassemblers/",
+  "docs/",
+  "examples/",
+  "extra/",
+  "openpilot/",
+  "tinygrad/runtime/autogen",
+  "test/external/mlperf_resnet",
+]
