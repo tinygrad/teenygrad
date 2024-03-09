@@ -37,8 +37,6 @@ jobs:
         python-version: 3.11
     - name: Install deps with testing deps
       run: pip install numpy tqdm mypy torch pytest tabulate --extra-index-url https://download.pytorch.org/whl/cpu
-    - name: Get code size
-      run: PYTHONPATH="." python sz.py
     - name: Test ops dtype optim
       run: |
         PYTHONPATH="." python test/test_ops.py
@@ -46,3 +44,5 @@ jobs:
         PYTHONPATH="." python test/test_optim.py
     - name: Check types with mypy
       run: mypy
+    - name: Get code size
+      run: PYTHONPATH="." python sz.py
