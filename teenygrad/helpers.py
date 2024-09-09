@@ -5,7 +5,7 @@ from math import prod # noqa: F401 # pylint:disable=unused-import
 from dataclasses import dataclass
 
 OSX = platform.system() == "Darwin"
-def dedup(x): return list(dict.fromkeys(x))   # retains list orderi
+def dedup(x): return list(dict.fromkeys(x))   # retains list ordering
 def argfix(*x): return tuple(x[0]) if x and x[0].__class__ in (tuple, list) else x
 def make_pair(x:Union[int, Tuple[int, ...]], cnt=2) -> Tuple[int, ...]: return (x,)*cnt if isinstance(x, int) else x
 def flatten(l:Iterator): return [item for sublist in l for item in sublist]
@@ -29,7 +29,7 @@ class DType:
   def __repr__(self): return f"dtypes.{self.name}"
 
 class dtypes:
-  @staticmethod # static methds on top, or bool in the type info will refer to dtypes.bool
+  @staticmethod # static methods on top, or bool in the type info will refer to dtypes.bool
   def is_int(x: DType)-> bool: return x in (dtypes.int8, dtypes.int16, dtypes.int32, dtypes.int64, dtypes.uint8, dtypes.uint16, dtypes.uint32, dtypes.uint64)
   @staticmethod
   def is_float(x: DType) -> bool: return x in (dtypes.float16, dtypes.float32, dtypes.float64)
