@@ -58,9 +58,9 @@ def fetch_mnist():
   parse = lambda file: np.frombuffer(gzip.open(file).read(), dtype=np.uint8).copy()
   BASE = os.path.dirname(__file__)+"/extra/datasets"
   X_train = parse(BASE+"/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).astype(np.float32)
-  Y_train = parse(BASE+"/mnist/train-labels-idx1-ubyte.gz")[8:]
+  Y_train = parse(BASE+"/mnist/train-labels-idx1-ubyte.gz")[8:].astype(np.int32)
   X_test = parse(BASE+"/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28)).astype(np.float32)
-  Y_test = parse(BASE+"/mnist/t10k-labels-idx1-ubyte.gz")[8:]
+  Y_test = parse(BASE+"/mnist/t10k-labels-idx1-ubyte.gz")[8:].astype(np.int32)
   return X_train, Y_train, X_test, Y_test
 
 X_train, Y_train, X_test, Y_test = fetch_mnist()
