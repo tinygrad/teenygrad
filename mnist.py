@@ -7,6 +7,8 @@ import gzip, os
 from teenygrad.nn import optim
 from teenygrad.helpers import getenv
 
+from teenygrad.helpers import dtypes
+
 def train(model, X_train, Y_train, optim, steps, BS=128, lossfn=lambda out,y: out.sparse_categorical_crossentropy(y),
         transform=lambda x: x, target_transform=lambda x: x, noloss=False):
   Tensor.training = True
@@ -19,7 +21,7 @@ def train(model, X_train, Y_train, optim, steps, BS=128, lossfn=lambda out,y: ou
     # network
     out = model.forward(x) if hasattr(model, 'forward') else model(x)
 
-    loss = lossfn(out, y)
+    loss = lossfn(out, y.cast(dtype=dtypes.int8))
     optim.zero_grad()
     loss.backward()
     if noloss: del loss
